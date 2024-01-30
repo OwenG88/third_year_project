@@ -31,8 +31,14 @@ zero_state_vector = np.transpose(np.matrix([1 if i == n + 1 else 0 for i in rang
 # |psi(t)> = U(t) * |psi(0)>
 psi = U_t * zero_state_vector
 
-x_axis = [i for i in range(-n, n+1)]
+x_axis = [i for i in range(-n, n+1, 2)]
 probability_distribution = np.square(np.abs(psi))
 
+#Filter out odd positions 
+probability_distribution = probability_distribution[::2]
+
 plt.plot(x_axis, probability_distribution)
+plt.xlabel("Position")
+plt.ylabel("Probability")
+plt.title("Probability Distribution of a Continuous Time Quantum-Walk")
 plt.show()

@@ -9,12 +9,12 @@ movements = []
 for i in range(n_trials):
     movements.append(sum(random.choice([1,-1]) for _ in range(time_steps)))
 
-x = [i for i in range(-time_steps, time_steps+1)]
+x = [i for i in range(-time_steps, time_steps+1, 2)]
 y = [movements.count(i) / n_trials for i in x]
 
-#Do a labelled scatter plot
-plt.scatter(x, y)
+
+plt.plot(x, y)
 plt.xlabel("Position")
 plt.ylabel("Probability")
-plt.title("Probability distribution of a classical random walk")
+plt.title("Probability Distribution of a Classical Random Walk")
 plt.show()

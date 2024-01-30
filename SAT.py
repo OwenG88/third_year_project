@@ -1,0 +1,40 @@
+
+class SAT: 
+    ## Class to represent a SAT formula
+    ## Literals are integers (positive or negative)
+    ## Will assume for n variables 
+    ## Literals are in [-n , n]
+
+    def __init__(self, clauses):
+        ## 2D list of clauses
+        self.clauses = clauses
+        self.m = len(clauses)
+        self.k = len(clauses[0])
+        self.n = self.get_num_vars()
+
+    def get_num_vars(self):
+        ## Get the number of variables in the formula
+        vars = set()
+        for clause in self.clauses:
+            for literal in clause:
+                vars.add(abs(literal))
+        return len(vars)
+    
+    def check_satisfied(self, assignment):
+        ## Check if the assignment satisfies the formula
+        ## Assignment is a list of 0s and 1s
+        for clause in self.clauses:
+            satisfied = False
+            for literal in clause: 
+                assigned_value = assignment[abs(literal) - 1]
+                if literal > 0 and assigned_value == 1:
+                    satisfied = True
+                    break
+                elif literal < 0 and assigned_value == 0:
+                    satisfied = True
+                    break
+            if not satisfied:
+                return False
+        return True
+            
+            
