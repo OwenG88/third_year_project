@@ -11,6 +11,7 @@ class SAT:
         self.m = len(clauses)
         self.k = len(clauses[0])
         self.n = self.get_num_vars()
+        self.counter = 0
 
     def get_num_vars(self):
         ## Get the number of variables in the formula
@@ -23,6 +24,7 @@ class SAT:
     def check_satisfied(self, assignment):
         ## Check if the assignment satisfies the formula
         ## Assignment is a list of 0s and 1s
+        self.counter += 1
         for clause in self.clauses:
             satisfied = False
             for literal in clause: 
