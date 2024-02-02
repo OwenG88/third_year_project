@@ -12,12 +12,14 @@ def TRY(formula):
     return None 
 
 def schoning(formula):
-    I = (2 * (formula.k - 1) / formula.k) ** formula.n
-    for i in range(int(I)):
+
+    # Can be run with Schöning's calculated lower bound
+    # I = 30 * (2 * (formula.k - 1) / formula.k) ** formula.n
+    while True:
         assignment = TRY(formula)
         if assignment != None:
             return assignment
-    return None
+
 
 # formula  = SAT.SAT([[1, 2, 3], [-1, -2, 3], [1, -2, -3], [-1, 2, -3]])
 # print(schoning(formula))

@@ -12,6 +12,7 @@ class SAT:
         self.k = len(clauses[0])
         self.n = self.get_num_vars()
         self.counter = 0
+        self.seen_before = set()
     
     def read_file(self, filename):
         ## Read in a file and create a SAT formula
@@ -46,6 +47,9 @@ class SAT:
         ## Check if the assignment satisfies the formula
         ## Assignment is a list of 0s and 1s
         self.counter += 1
+        if tuple(assignment) in self.seen_before:
+            return False
+        
         for clause in self.clauses:
             satisfied = False
             for literal in clause: 
@@ -58,6 +62,7 @@ class SAT:
                     break
             if not satisfied:
                 return False
+        self.seen_before.add(tuple(assignment))
         return True
             
             

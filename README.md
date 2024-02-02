@@ -1,2 +1,2 @@
-# third_year_project
-Qiskit Python Stuff Mainly
+# 3YP Code
+Random and Quantum Walk simulations.
