@@ -11,7 +11,7 @@ def walk(formula):
             assignment[x] = 1 - assignment[x]
 
 
-formula  = SAT.SAT([[1, 2, 3], [-1, -2, 3], [1, -2, -3], [-1, 2, -3]])
-assignment = walk(formula)
-print(assignment)
-print(formula.counter)
+# formula  = SAT.SAT([[1, 2, 3], [-1, -2, 3], [1, -2, -3], [-1, 2, -3]])
+# assignment = walk(formula)
+# print(assignment)
+# print(formula.counter)

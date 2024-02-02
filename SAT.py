@@ -12,6 +12,27 @@ class SAT:
         self.k = len(clauses[0])
         self.n = self.get_num_vars()
         self.counter = 0
+    
+    def read_file(self, filename):
+        ## Read in a file and create a SAT formula
+        ## File is a list of clauses
+        ## Each clause is a list of literals
+        ## Literals are integers (positive or negative)
+        ## Will assume for n variables 
+        ## Literals are in [-n , n]
+        with open(filename) as f:
+            lines = f.readlines()
+        clauses = []
+        for line in lines[8:]:
+            clause = []
+            for literal in line.split():
+                clause.append(int(literal))
+            clauses.append(clause)
+        self.clauses = clauses
+        self.m = len(clauses)
+        self.k = len(clauses[0])
+        self.n = self.get_num_vars()
+        self.counter = 0
 
     def get_num_vars(self):
         ## Get the number of variables in the formula

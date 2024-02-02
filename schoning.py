@@ -19,6 +19,6 @@ def schoning(formula):
             return assignment
     return None
 
-formula  = SAT.SAT([[1, 2, 3], [-1, -2, 3], [1, -2, -3], [-1, 2, -3]])
-print(schoning(formula))
-print(formula.counter)
+# formula  = SAT.SAT([[1, 2, 3], [-1, -2, 3], [1, -2, -3], [-1, 2, -3]])
+# print(schoning(formula))
+# print(formula.counter)
