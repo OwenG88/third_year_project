@@ -7,7 +7,8 @@ def TRY(formula):
         if formula.check_satisfied(assignment):
             return assignment
         else:
-            x = random.randrange(formula.n)
+            unsat_clause = formula.unsatisfied_clause 
+            x = random.choice(list(map(abs,unsat_clause))) - 1
             assignment[x] = 1 - assignment[x]
     return None 
 

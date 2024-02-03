@@ -25,11 +25,12 @@ def test_sat_algo(algo):
         assignment = algo(formula)
         if assignment == None:
             print(f"Failed to solve {i}")
+
         n_attempts.append(formula.counter)
     return n_attempts
 
 mean = lambda x: round(sum(x)/len(x),2)
-rw_attempts = test_sat_algo(rw_SAT.walk)
+rw_attempts = test_sat_algo(rw_SAT.walk_unsat)
 schoning_attempts = test_sat_algo(schoning.schoning)
 print(f"Random Walk Average Steps: {mean(rw_attempts)}")
 print(f"Schoning Average Steps: {mean(schoning_attempts)}")

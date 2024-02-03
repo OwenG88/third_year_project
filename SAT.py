@@ -1,4 +1,4 @@
-
+import numpy as np
 class SAT: 
     ## Class to represent a SAT formula
     ## Literals are integers (positive or negative)
@@ -61,6 +61,7 @@ class SAT:
                     satisfied = True
                     break
             if not satisfied:
+                self.unsatisfied_clause = clause
                 return False
         self.seen_before.add(tuple(assignment))
         return True
