@@ -30,7 +30,7 @@ def test_sat_algo(algo):
     return n_attempts
 
 mean = lambda x: round(sum(x)/len(x),2)
-rw_attempts = test_sat_algo(rw_SAT.walk_unsat)
+rw_attempts = test_sat_algo(rw_SAT.walk)
 schoning_attempts = test_sat_algo(schoning.schoning)
 print(f"Random Walk Average Steps: {mean(rw_attempts)}")
 print(f"Schoning Average Steps: {mean(schoning_attempts)}")

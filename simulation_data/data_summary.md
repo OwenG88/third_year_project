@@ -6,9 +6,9 @@ We measure the number of times check_satisfying is called i.e. the number of tim
 
 ### Run 1
 
-Mean: 516.135
-Standard Deviation: 888.1892753096041
-Median: 229.5
+Mean: 516.135 \
+Standard Deviation: 888.1892753096041 \
+Median: 229.5 \
 
 ### Run 2
 
