@@ -37,10 +37,10 @@ print(f"Schoning Average Steps: {mean(schoning_attempts)}")
 
 
 ## Write attempts to file
-with open("rw_attempts.txt", "w") as f:
-    f.write("\n".join(map(str, rw_attempts)))
-f.close()
+# with open("rw_attempts.txt", "w") as f:
+#     f.write("\n".join(map(str, rw_attempts)))
+# f.close()
 
-with open("schoning_attempts.txt", "w") as f:
-    f.write("\n".join(map(str, schoning_attempts)))
-f.close()
+# with open("schoning_attempts.txt", "w") as f:
+#     f.write("\n".join(map(str, schoning_attempts)))
+# f.close()

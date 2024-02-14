@@ -70,8 +70,9 @@ class QSAT:
                     break
             if not satisfied:
                 self.unsatisfied_clause = clause
+                self.seen_before.add(tuple(assignment))
                 return False
-        self.seen_before.add(tuple(assignment))
+  
         return True
             
             
