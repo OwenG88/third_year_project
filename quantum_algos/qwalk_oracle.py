@@ -4,7 +4,29 @@ import random
 import QSAT
 import generate_instances
 
-def qwalk(formula):
+
+###Builds on qwalk.py but uses oracle calls to modify the evolution 
+###operator to bias towards satisfying assignments
+
+def compute_sat_assignments(formula):
+    ## Generate a list of all satisfying assignments
+    ## of a given SAT formula
+
+    n = formula.n
+    assignments = []
+
+    for i in range(2**n):
+        assignment = bin(i)[2:].zfill(n)
+        assignment = list(map(int, assignment))
+        if formula.check_satisfied(assignment):
+            assignments.append(assignment)
+    
+    return assignments
+            
+
+
+
+def qwalk_oracle(formula):
     n = formula.n
     ## Create the Grover Coin
     G = (2 / n) * qt.qeye(n) - qt.qeye(n)
@@ -53,6 +75,26 @@ def qwalk(formula):
     initial_state = initial_state.data.toarray()
     ## Create the evolution operator
     U = S @ G_I
+
+    ## We modify the evolution operator to bias towards
+    ## satisfying assignments.
+
+    R = np.eye(n * 2 ** n, dtype=complex)
+    assignments = compute_sat_assignments(formula)
+
+    for assignment in assignments:
+        index = int("".join(map(str, assignment)), 2)
+        vertex = qt.basis(2 ** n, index)
+        state = qt.tensor(coin_space, vertex)
+        partial = 2 * state * state.dag()
+        partial = partial.data.toarray()
+        R -= partial
+
+    U = U @ R
+
+
+
+
     
     ## Get the optimal time
     t_opt = int((np.pi / 4) * np.sqrt(2 * (2 ** n))) + 1
@@ -73,9 +115,10 @@ def qwalk(formula):
     ## Normalise the states
     normalisation = np.sqrt(sum([i[1] ** 2 for i in states])) 
     states = [[i[0], i[1] / normalisation] for i in states]
-   
+
     assignment = None
     counter = 0
+    print("MEasuring")
     while assignment == None:
         counter += 1
         ## Measure
@@ -88,7 +131,6 @@ def qwalk(formula):
             return assignment, counter
         
         assignment = None
-
     return None
 
 
@@ -97,8 +139,8 @@ def qwalk(formula):
 list_rounds = []
 n_trials = 1
 for i in range(n_trials):
-    formula = generate_instances.gen_formula(3)
-    assignment, rounds = qwalk(formula)
+    formula = generate_instances.gen_formula(9)
+    assignment, rounds = qwalk_oracle(formula)
     list_rounds.append(rounds)
     print(rounds)
     
