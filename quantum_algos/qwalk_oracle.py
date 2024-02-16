@@ -29,7 +29,8 @@ def compute_sat_assignments(formula):
 def qwalk_oracle(formula):
     n = formula.n
     ## Create the Grover Coin
-    G = (2 / n) * qt.qeye(n) - qt.qeye(n)
+    G = qt.Qobj((2 / n) * np.ones(n) - np.eye(n))
+
     ## Create the position space in a diagonal state
     position_space = qt.Qobj((1 / np.sqrt(2**n)) * np.ones((2**n, 1)))
     ##position_space = qt.basis(2 ** n, 0)
@@ -76,10 +77,18 @@ def qwalk_oracle(formula):
     ## Create the evolution operator
     U = S @ G_I
 
+
+
+    # for i in G:
+    #     for j in i:
+    #         print(int(j),end=" ")
+    #     print()
+
     ## We modify the evolution operator to bias towards
     ## satisfying assignments.
 
     R = np.eye(n * 2 ** n, dtype=complex)
+
     assignments = compute_sat_assignments(formula)
 
     for assignment in assignments:
@@ -95,9 +104,10 @@ def qwalk_oracle(formula):
 
 
 
+
     
     ## Get the optimal time
-    t_opt = int((np.pi / 4) * np.sqrt(2 * (2 ** n))) + 1
+    t_opt = int((np.pi / 4) * np.sqrt(2 * (2 ** n))) 
 
     ## Simulate the evolution
     Ut = np.linalg.matrix_power(U, t_opt)
@@ -110,7 +120,7 @@ def qwalk_oracle(formula):
         state = initial_state[i][0]
         if state != 0:
             states.append([i, state])
-    # print(states)
+
 
     ## Normalise the states
     normalisation = np.sqrt(sum([i[1] ** 2 for i in states])) 
@@ -118,7 +128,7 @@ def qwalk_oracle(formula):
 
     assignment = None
     counter = 0
-    print("MEasuring")
+
     while assignment == None:
         counter += 1
         ## Measure
@@ -137,9 +147,9 @@ def qwalk_oracle(formula):
 #formula  = QSAT.QSAT([[1, 2, 3], [-1, -2, 3], [1, -2, -3], [-1, 2, -3]])
 
 list_rounds = []
-n_trials = 1
+n_trials = 100
 for i in range(n_trials):
-    formula = generate_instances.gen_formula(9)
+    formula = generate_instances.gen_formula(3)
     assignment, rounds = qwalk_oracle(formula)
     list_rounds.append(rounds)
     print(rounds)

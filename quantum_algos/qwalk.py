@@ -7,7 +7,7 @@ import generate_instances
 def qwalk(formula):
     n = formula.n
     ## Create the Grover Coin
-    G = (2 / n) * qt.qeye(n) - qt.qeye(n)
+    G = qt.Qobj((2 / n) * np.ones(n) - np.eye(n))
     ## Create the position space in a diagonal state
     position_space = qt.Qobj((1 / np.sqrt(2**n)) * np.ones((2**n, 1)))
     ##position_space = qt.basis(2 ** n, 0)
@@ -95,7 +95,7 @@ def qwalk(formula):
 #formula  = QSAT.QSAT([[1, 2, 3], [-1, -2, 3], [1, -2, -3], [-1, 2, -3]])
 
 list_rounds = []
-n_trials = 1
+n_trials = 100
 for i in range(n_trials):
     formula = generate_instances.gen_formula(3)
     assignment, rounds = qwalk(formula)
