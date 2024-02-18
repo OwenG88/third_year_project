@@ -24,7 +24,16 @@ def compute_sat_assignments(formula):
     return assignments
             
 
-
+def get_vars_from_unsat_clause(formula, assignment):
+    unsat_clauses = []
+    for clause in formula.clauses:
+        for literal in clause:
+            if assignment[abs(literal) - 1] * literal > 0:
+                break
+        else:
+            unsat_clauses += [*map(abs,clause)]
+    
+    return list(set(unsat_clauses))
 
 def qwalk_oracle(formula):
     n = formula.n
@@ -42,22 +51,24 @@ def qwalk_oracle(formula):
     G_I = qt.tensor(G, qt.qeye(2 ** n))
 
     ## Create the shift operator
-    S = qt.Qobj(np.zeros((n * 2 ** n, n * 2 ** n)))
-    for i in range(n):
-        #Our coin vector
-        a = qt.basis(n, i)
+    S = qt.Qobj(np.zeros((n * 2 ** n, n * 2 ** n),dtype=complex))
+     
+    for j in range(2 ** n):
+         #Our position vector
+        v = qt.basis(2 ** n, j)
+        
+        ##Get the vertex in assignment form
+        vertex = list(map(int,bin(j)[2:].zfill(n)))
+        possible_edges = get_vars_from_unsat_clause(formula, vertex)
+        complement = [i for i in range(1, n + 1) if i not in possible_edges]
+        for edge in possible_edges:
+            #Our coin vector
+            a = qt.basis(n, edge - 1)
 
-        #This is the edge we are taking on the hypercube
-        x = ["0" for _ in range(n)]
-        x[i] = "1" 
-        index = int("".join(x), 2)
-
-
-        for j in range(2 ** n):
-            
-            #Our position vector
-            v = qt.basis(2 ** n, j)
-
+            #This is the edge we are taking on the hypercube
+            x = ["0" for _ in range(n)]
+            x[edge - 1] = "1" 
+            index = int("".join(x), 2)
             ## After we take a particular edge
             v_ea = qt.basis(2 ** n, j ^ index)
 
@@ -69,9 +80,19 @@ def qwalk_oracle(formula):
             partial = qt.Qobj(partial.data.toarray())
 
             S += partial
+    print(S)
+    check = S * S.dag() 
+    print(check)
+    # check = check.data.toarray()
+    # for i in check:
+    #     for j in i:
+    #         print(int(j),end=" ")
+    #     print()
+
 
     ## Easier to work with numpy arrays
     S = S.data.toarray()
+ 
     G_I = G_I.data.toarray()
     initial_state = initial_state.data.toarray()
     ## Create the evolution operator
@@ -108,7 +129,8 @@ def qwalk_oracle(formula):
     
     ## Get the optimal time
     t_opt = int((np.pi / 4) * np.sqrt(2 * (2 ** n))) 
-    t_opt = int((np.pi / 4) * np.sqrt(2 * ((4/3) ** n)))
+    t_opt = int((np.pi / 4) * np.sqrt(2 * ((4/3) ** n))) 
+    # t_opt = int(np.sqrt(np.sqrt(2 ** n)))
 
     ## Simulate the evolution
     Ut = np.linalg.matrix_power(U, t_opt)
@@ -145,13 +167,13 @@ def qwalk_oracle(formula):
     return None
 
 
-#formula  = QSAT.QSAT([[1, 2, 3], [-1, -2, 3], [1, -2, -3], [-1, 2, -3]])
+formula_fixed  = QSAT.QSAT([[1, 2, 3], [-1, -2, 3], [1, -2, -3], [-1, 2, -3]])
 
 list_rounds = []
-n_trials = 100
+n_trials = 1
 for i in range(n_trials):
-    formula = generate_instances.gen_formula(5)
-    assignment, rounds = qwalk_oracle(formula)
+    formula = generate_instances.gen_formula(3)
+    assignment, rounds = qwalk_oracle(formula_fixed)
     list_rounds.append(rounds)
     print(rounds)
     

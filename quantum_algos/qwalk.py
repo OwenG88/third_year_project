@@ -97,7 +97,7 @@ def qwalk(formula):
 list_rounds = []
 n_trials = 100
 for i in range(n_trials):
-    formula = generate_instances.gen_formula(3)
+    formula = generate_instances.gen_formula(5)
     assignment, rounds = qwalk(formula)
     list_rounds.append(rounds)
     print(rounds)
