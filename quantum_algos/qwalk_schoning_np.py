@@ -3,7 +3,7 @@ import numpy as np
 import random
 import QSAT
 import generate_instances
-
+from numba import njit
 
 ###Builds on qwalk.py but uses oracle calls to modify the evolution 
 ###operator to bias towards satisfying assignments
@@ -22,7 +22,13 @@ def compute_sat_assignments(formula):
             assignments.append(assignment)
     
     return assignments
-            
+
+
+@njit(fastmath=True, cache=True)
+def speed_prod(a, v, v_ea):
+    e_av = np.kron(a, v_ea) 
+    a_v = np.kron(a, v).conj().T
+    return np.outer(e_av, a_v)    
 
 def get_vars_from_unsat_clause(formula, assignment):
     unsat_clauses = []
@@ -35,102 +41,87 @@ def get_vars_from_unsat_clause(formula, assignment):
     
     return list(set(unsat_clauses))
 
+def make_edges(n): 
+    edges = []
+    a = np.zeros(n)
+    for i in range(n):
+        a[i] = 1
+        x = ["0" for _ in range(n)]
+        x[i] = "1"
+        index = int("".join(x), 2)
+        edges.append((i, a.copy(), index))
+        a[i] = 0
+    return edges
+
 def qwalk_oracle(formula):
     n = formula.n
     ## Create the Grover Coin
-    G = qt.Qobj((2 / n) * np.ones(n) - np.eye(n))
+    H = qt.Qobj(0.5 * np.array([[1, 1], [1, -1]]))
+    G = (2 / n) * np.ones(n) - np.eye(n)
+    # G = qt.tensor(H, H)
 
     ## Create the position space in a diagonal state
+    position_space = (1 / np.sqrt(2**n)) * np.ones((2**n, 1))
     ##position_space = qt.basis(2 ** n, 0)
-    position_space = qt.Qobj((1 / np.sqrt(2**n)) * np.ones((2**n, 1)))
     ## Create the coin space in a diagonal state
-    coin_space = qt.Qobj((1 / np.sqrt(n)) * np.ones((n, 1)))
+    coin_space = (1 / np.sqrt(n)) * np.ones((n, 1))
     ## Create the initial state
-    initial_state = qt.tensor(coin_space, position_space)
+    # initial_state = qt.tensor(coin_space, position_space)
+    # print(initial_state)
+    initial_state = np.kron(coin_space, position_space)
     ## Create the Grover Coin operator
-    G_I = qt.tensor(G, qt.qeye(2 ** n))
- 
+    G_I = np.kron(G,np.eye(2 ** n))
+    # print(G_I)
     ## Create the shift operator
-    S = qt.Qobj(np.zeros((n * 2 ** n, n * 2 ** n),dtype=complex))
+    S = np.zeros((n * 2 ** n, n * 2 ** n), dtype=complex)
     S_og = S.copy()
-    # print(qt.basis(n, 1))
+
+    ##Get the vertex in assignment form
+    
+    
+    v = np.zeros(2 ** n)
+    v_ea = np.zeros(2 ** n)
+
+    edges = make_edges(n)
+
+
     for j in range(2 ** n):
-         #Our position vector
-        v = qt.basis(2 ** n, j)
-        
-        ##Get the vertex in assignment form
+
+        v[j] = 1
         vertex = list(map(int,bin(j)[2:].zfill(n)))
         possible_edges = get_vars_from_unsat_clause(formula, vertex)
-        complement = [i for i in range(1, n + 1) if i not in possible_edges]
-        # print(possible_edges, complement)
-        for edge in possible_edges:
-            #Our coin vector
-            a = qt.basis(n, edge - 1)
+        # complement = [i for i in range(1, n + 1) if i not in possible_edges]
 
-            #This is the edge we are taking on the hypercube
-            x = ["0" for _ in range(n)]
-            x[edge - 1] = "1" 
-            index = int("".join(x), 2)
-            ## After we take a particular edge
-            v_ea = qt.basis(2 ** n, j ^ index)
+        for i, a, index in edges:  
+            
+            v_ea[j ^ index] = 1
 
-            ##Take the relevant tensor products
-            e_av = qt.tensor(a, v_ea)
-            a_v = qt.tensor(a, v).dag()
+            # print(speed_prod(a, v, v_ea))
 
-            partial =  e_av *a_v
-            partial = qt.Qobj(partial.data.toarray())
-            # print(partial)  
-            # break
+            if i + 1 in possible_edges:
+                S += speed_prod(a, v, v_ea)
+            else:
+                S -= speed_prod(a, v, v_ea)
 
 
-            # for l in partial.data.toarray():
-            #     for k in l:
-            #         if k!=0:
-            #             print(k,end=" ")
-            #     print()
-
-            S += partial
-            S_og += partial
-
-        for non_edge in complement:
-            # print("here")               
-            a = qt.basis(n, non_edge - 1)
-
-            #This is the edge we are taking on the hypercube
-            x = ["0" for _ in range(n)]
-            x[non_edge - 1] = "1" 
-            index = int("".join(x), 2)
-            ## After we take a particular edge
-            v_ea = qt.basis(2 ** n, j ^ index)
-
-            ##Take the relevant tensor products
-            e_av = qt.tensor(a, v_ea)
-            a_v = qt.tensor(a, v).dag()
-
-            partial =  e_av *a_v
-            partial = qt.Qobj(partial.data.toarray())
-            # print(partial)
-            S -= partial
-
-            # for l in partial.data.toarray():
-            #     for k in l:
-            #         if k!=0:
-            #             print(k,end=" ")
-    #         #     print()
+            v_ea[j ^ index] = 0
 
 
-    # for i in S.data.toarray():
+        v[j] = 0
+
+    # for i in S:
     #     for j in i:
     #         if j != 0:
     #             print(int(j),end=" ")
     # print()
-    # check = S * S.dag() # # print(check)
-    # check = np.matrix(S.data.toarray()) 
-    # check_copy = check.copy().conj().T
+    # S_copy = S.copy()
+
+    # check = S * S_copy.conj().T# # print(check)
+    # check = np.matrix(S) 
+    # check_copy = S.copy().conj().T
     # check = check @ check_copy
     # print(check)
-    # # check = S.data.toarray()
+    # # check = check.data.toarray()
     # for i in check:
     #     for j in i:
     #         print(int(j),end=" ")
@@ -145,20 +136,11 @@ def qwalk_oracle(formula):
 
 
     ## Easier to work with numpy arrays
-    S = S.data.toarray()
- 
-    G_I = G_I.data.toarray()
-    initial_state = initial_state.data.toarray()
+
     ## Create the evolution operator
     U = S @ G_I
 
-    # print(U)
 
-
-    # for i in G:
-    #     for j in i:
-    #         print(int(j),end=" ")
-    #     print()
 
     ## We modify the evolution operator to bias towards
     ## satisfying assignments.
@@ -167,13 +149,15 @@ def qwalk_oracle(formula):
 
     assignments = compute_sat_assignments(formula)
 
+    vertex = np.zeros(2 ** n)
     for assignment in assignments:
         index = int("".join(map(str, assignment)), 2)
-        vertex = qt.basis(2 ** n, index)
-        state = qt.tensor(coin_space, vertex)
-        partial = 2 * state * state.dag()
-        partial = partial.data.toarray()
+
+        vertex[index] = 1
+        state = np.kron(coin_space, vertex)
+        partial = 2 * np.outer(state, state.conj().T)
         R -= partial
+        vertex[index] = 0
 
     U = U @ R
     
@@ -186,6 +170,7 @@ def qwalk_oracle(formula):
     Ut = np.linalg.matrix_power(U, t_opt)
     initial_state = Ut @ initial_state
 
+    # print(initial_state)
     
     ## Get the non-zero states out
     states = []
@@ -217,22 +202,22 @@ def qwalk_oracle(formula):
     return None
 
 
+
+
+
 formula_fixed  = QSAT.QSAT([[1, 2, 3], [-1, -2, 3], [1, -2, -3], [-1, 2, -3]])
 
 list_rounds = []
-n_trials = 100
-n = 5
+n_trials = 1000
+indicator = n_trials // 10 if n_trials > 10 else 1
+n = 6
 for i in range(n_trials):
     formula = generate_instances.gen_formula(n)
-    formula.clauses = formula.clauses
+    formula.clauses = formula.clauses[::2]
     assignment, rounds = qwalk_oracle(formula)
     list_rounds.append(rounds)
-    if i % (n_trials // 10) == 0:
+    if i % indicator == 0:
         print(F"Trial {i} completed")
     
 print("Average rounds: ", sum(list_rounds) / n_trials)
 
-# t_opt = int((np.pi / 4) * np.sqrt(2 * (2 ** n))) 
-# print(t_opt)
-# t_opt = int((np.pi / 4) * np.sqrt(4 * ((4/3) ** n))) 
-# print(t_opt)

@@ -80,51 +80,19 @@ def qwalk_oracle(formula):
 
             v_ea[j ^ index] = 1
 
-            ##Take the relevant tensor products
-            # e_av = qt.tensor(a, v_ea)
-            # a_v = qt.tensor(a, v).dag()
-
-            # e_av = np.kron(a, v_ea) 
-            # # print(e_av)
-            # a_v = np.kron(a, v).conj().T
-            # # print()
-            # # print(a_v)
-            # partial =  np.outer(e_av, a_v)
-            # print(partial)
-            # # partial = qt.Qobj(partial.data.toarray())
-            # print(a, v, v_ea)
-
-            ###TODO work out how to optimise products 
-
-            # if np.array_equal(v, v_ea):
-            # # print(speed_prod(a, v, v_ea))
-            # # break
-            #     S += speed_prod(a, v, v_ea)
-            
-            # else: 
-            #     k = np.zeros((n * 2 ** n, n * 2 ** n))
-            #     assert np.array_equal(speed_prod(a, v, v_ea),k)
-
             S += speed_prod(a, v, v_ea)
 
             v[j] = 0
             v_ea[j ^ index] = 0
     
     # print("Shift operator made")
-    print(S)
+    # print(S)
     ## Easier to work with numpy arrays
     # S = S.data.toarray()
     # G_I = G_I.data.toarray()
     # initial_state = initial_state.data.toarray()
     ## Create the evolution operator
     U = S @ G_I
-
-
-
-    # for i in G:
-    #     for j in i:
-    #         print(int(j),end=" ")
-    #     print()
 
     ## We modify the evolution operator to bias towards
     ## satisfying assignments.
@@ -135,14 +103,10 @@ def qwalk_oracle(formula):
 
     for assignment in assignments:
         index = int("".join(map(str, assignment)), 2)
-        # vertex = qt.basis(2 ** n, index)
-        # state = qt.tensor(coin_space, vertex)
-        # partial = 2 * state * state.dag()
-        # partial = partial.data.toarray()
         vertex = np.zeros(2 ** n)
         vertex[index] = 1
         state = np.kron(coin_space, vertex)
-        partial = 2 * np.outer(state, state.conj())
+        partial = 2 * np.outer(state, state.conj().T)
         R -= partial
 
     U = U @ R
@@ -153,8 +117,8 @@ def qwalk_oracle(formula):
 
     
     ## Get the optimal time
-    t_opt = int((np.pi / 4) * np.sqrt(2 * (2 ** n))) 
-    #t_opt = int((np.pi / 4) * np.sqrt(4 * ((4/3) ** n)))
+    #t_opt = int((np.pi / 4) * np.sqrt(2 * (2 ** n))) 
+    t_opt = int((np.pi / 4) * np.sqrt(4 * ((4/3) ** n)))
 
     ## Simulate the evolution
     Ut = np.linalg.matrix_power(U, t_opt)
@@ -197,14 +161,15 @@ def qwalk_oracle(formula):
 #formula  = QSAT.QSAT([[1, 2, 3], [-1, -2, 3], [1, -2, -3], [-1, 2, -3]])
 
 list_rounds = []
-n_trials = 1
-n = 3
+n_trials = 1000
+indicator = n_trials // 10 if n_trials > 10 else 1
+n = 6
 for i in range(n_trials):
     formula = generate_instances.gen_formula(n)
     formula.clauses = formula.clauses[::2]
     assignment, rounds = qwalk_oracle(formula)
     list_rounds.append(rounds)
-    if i % (n_trials // 10) == 0:
+    if i % indicator == 0:
         print(F"Trial {i} completed")
     
 print("Average rounds: ", sum(list_rounds) / n_trials)

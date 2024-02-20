@@ -15,6 +15,7 @@ def qwalk(formula):
     coin_space = qt.Qobj((1 / np.sqrt(n)) * np.ones((n, 1)))
     ## Create the initial state
     initial_state = qt.tensor(coin_space, position_space)
+   
     ## Create the Grover Coin operator
     G_I = qt.tensor(G, qt.qeye(2 ** n))
 
@@ -95,7 +96,7 @@ def qwalk(formula):
 #formula  = QSAT.QSAT([[1, 2, 3], [-1, -2, 3], [1, -2, -3], [-1, 2, -3]])
 
 list_rounds = []
-n_trials = 100
+n_trials = 1
 for i in range(n_trials):
     formula = generate_instances.gen_formula(5)
     assignment, rounds = qwalk(formula)
