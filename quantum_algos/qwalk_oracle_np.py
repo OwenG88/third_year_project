@@ -30,7 +30,19 @@ def speed_prod(a, v, v_ea):
     a_v = np.kron(a, v).conj().T
     return np.outer(e_av, a_v)
 
-
+@njit(fastmath=True, cache=True)
+def build_shift(n):
+    # edges = make_edges(n)
+    S = np.zeros((n * 2 ** n, n * 2 ** n))
+    partial = np.zeros((n * 2 ** n, n * 2 ** n))
+    for j in range(2 ** n):
+        for i in range(n):
+            index = 2 ** (n - 1 - i)  
+            partial[(2 ** n) * i + (j ^ index)][(2 ** n) * i + j] = 1
+            S += partial
+            partial[(2 ** n) * i + (j ^ index)][(2 ** n) * i + j] = 0
+            
+    return S
 
 def qwalk_oracle(formula):
     n = formula.n
@@ -52,39 +64,39 @@ def qwalk_oracle(formula):
     G_I = np.kron(G,np.eye(2 ** n))
 
     ## Create the shift operator
-    S = np.zeros((n * 2 ** n, n * 2 ** n))
+    # S = np.zeros((n * 2 ** n, n * 2 ** n))
 
     # print("Initial objects made")
-    for i in range(n):
-        #Our coin vector
-        # a = qt.basis(n, i)
-        a = np.zeros(n)
-        a[i] = 1
+    # for i in range(n):
+    #     #Our coin vector
+    #     # a = qt.basis(n, i)
+    #     a = np.zeros(n)
+    #     a[i] = 1
 
-        #This is the edge we are taking on the hypercube
-        x = ["0" for _ in range(n)]
-        x[i] = "1" 
-        index = int("".join(x), 2)
+    #     #This is the edge we are taking on the hypercube
+    #     x = ["0" for _ in range(n)]
+    #     x[i] = "1" 
+    #     index = int("".join(x), 2)
 
-        v = np.zeros(2 ** n)
-        v_ea = np.zeros(2 ** n)
-        for j in range(2 ** n):
+    #     v = np.zeros(2 ** n)
+    #     v_ea = np.zeros(2 ** n)
+    #     for j in range(2 ** n):
             
-            #Our position vector
-            # v = qt.basis(2 ** n, j)
+    #         #Our position vector
+    #         # v = qt.basis(2 ** n, j)
             
-            v[j] = 1
+    #         v[j] = 1
 
-            ## After we take a particular edge
-            # v_ea = qt.basis(2 ** n, j ^ index)
+    #         ## After we take a particular edge
+    #         # v_ea = qt.basis(2 ** n, j ^ index)
 
-            v_ea[j ^ index] = 1
+    #         v_ea[j ^ index] = 1
 
-            S += speed_prod(a, v, v_ea)
+    #         S += speed_prod(a, v, v_ea)
 
-            v[j] = 0
-            v_ea[j ^ index] = 0
-    
+    #         v[j] = 0
+    #         v_ea[j ^ index] = 0
+    S = build_shift(n)
     # print("Shift operator made")
     # print(S)
     ## Easier to work with numpy arrays
@@ -161,9 +173,9 @@ def qwalk_oracle(formula):
 #formula  = QSAT.QSAT([[1, 2, 3], [-1, -2, 3], [1, -2, -3], [-1, 2, -3]])
 
 list_rounds = []
-n_trials = 1000
+n_trials = 1
 indicator = n_trials // 10 if n_trials > 10 else 1
-n = 6
+n = 9
 for i in range(n_trials):
     formula = generate_instances.gen_formula(n)
     formula.clauses = formula.clauses[::2]

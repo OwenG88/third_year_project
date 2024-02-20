@@ -3,7 +3,7 @@ import numpy as np
 import random
 import QSAT
 import generate_instances
-from numba import njit
+from numba import njit, jit
 
 ###Builds on qwalk.py but uses oracle calls to modify the evolution 
 ###operator to bias towards satisfying assignments
@@ -24,11 +24,25 @@ def compute_sat_assignments(formula):
     return assignments
 
 
-@njit(fastmath=True, cache=True)
+# @njit(fastmath=True, cache=True)
 def speed_prod(a, v, v_ea):
+    # print("i j a v v_ea")
+
     e_av = np.kron(a, v_ea) 
     a_v = np.kron(a, v).conj().T
-    return np.outer(e_av, a_v)    
+    partial = np.outer(e_av, a_v)   
+    # for i in range(len(partial)):
+    #     for j in range(len(partial[i])):
+    #         if partial[i][j] != 0:
+
+    #             a_nonzero = np.where(a == 1)[0]
+    #             v_nonzero = np.where(v == 1)[0]
+    #             v_ea_nonzero = np.where(v_ea == 1)[0]
+            
+    #             print(i, j, a_nonzero, v_nonzero, v_ea_nonzero)
+
+
+    return partial
 
 def get_vars_from_unsat_clause(formula, assignment):
     unsat_clauses = []
@@ -53,6 +67,48 @@ def make_edges(n):
         a[i] = 0
     return edges
 
+# @jit(fastmath=True, cache=True)
+def build_shift(n):
+    # edges = make_edges(n)
+    S = np.zeros((n * 2 ** n, n * 2 ** n), dtype=complex)
+    partial = np.zeros((n * 2 ** n, n * 2 ** n), dtype=complex)
+    for j in range(2 ** n):
+        vertex = list(map(int,bin(j)[2:].zfill(n)))
+        possible_edges = get_vars_from_unsat_clause(formula, vertex)
+        # complement = [i for i in range(1, n + 1) if i not in possible_edges]
+
+        for i in range(n):
+            index = 2 ** (n - 1 - i)  
+            
+            # v_ea[j ^ index] = 1
+            # print(i, j, (j ^ index))
+            # print(speed_prod(a, v, v_ea))
+            partial[(2 ** n) * i + (j ^ index)][(2 ** n) * i + j] = 1
+
+            # true_partial = speed_prod(a, v, v_ea)
+            ##Check partial and true partial are equal
+            # for a,b in zip(partial, true_partial):
+            #     for k,l in zip(a,b):
+            #         if k != l:
+            #             print("Not equal")
+            #             print(i, j, (j ^ index))
+            #             print(k,l)
+
+            if i + 1 in possible_edges:
+                S += partial
+            else:
+                S -= 1j * partial
+            partial[(2 ** n) * i + (j ^ index)][(2 ** n) * i + j] = 0
+
+
+            # v_ea[j ^ index] = 0
+
+
+        # v[j] = 0
+            
+    return S
+
+
 def qwalk_oracle(formula):
     n = formula.n
     ## Create the Grover Coin
@@ -76,6 +132,8 @@ def qwalk_oracle(formula):
     S = np.zeros((n * 2 ** n, n * 2 ** n), dtype=complex)
     S_og = S.copy()
 
+    S = build_shift(n)
+
     ##Get the vertex in assignment form
     
     
@@ -84,30 +142,9 @@ def qwalk_oracle(formula):
 
     edges = make_edges(n)
 
+    partial = np.zeros((n * 2 ** n, n * 2 ** n), dtype=complex)
 
-    for j in range(2 ** n):
-
-        v[j] = 1
-        vertex = list(map(int,bin(j)[2:].zfill(n)))
-        possible_edges = get_vars_from_unsat_clause(formula, vertex)
-        # complement = [i for i in range(1, n + 1) if i not in possible_edges]
-
-        for i, a, index in edges:  
-            
-            v_ea[j ^ index] = 1
-
-            # print(speed_prod(a, v, v_ea))
-
-            if i + 1 in possible_edges:
-                S += speed_prod(a, v, v_ea)
-            else:
-                S -= speed_prod(a, v, v_ea)
-
-
-            v_ea[j ^ index] = 0
-
-
-        v[j] = 0
+    
 
     # for i in S:
     #     for j in i:
@@ -210,10 +247,10 @@ formula_fixed  = QSAT.QSAT([[1, 2, 3], [-1, -2, 3], [1, -2, -3], [-1, 2, -3]])
 list_rounds = []
 n_trials = 1000
 indicator = n_trials // 10 if n_trials > 10 else 1
-n = 6
+n = 5
 for i in range(n_trials):
     formula = generate_instances.gen_formula(n)
-    formula.clauses = formula.clauses[::2]
+    formula.clauses = formula.clauses
     assignment, rounds = qwalk_oracle(formula)
     list_rounds.append(rounds)
     if i % indicator == 0:
