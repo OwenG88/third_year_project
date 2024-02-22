@@ -96,8 +96,8 @@ def build_shift(n):
 
             if i + 1 in possible_edges:
                 S += partial
-            else:
-                S -= 1j * partial
+            # else:
+            #     S -= 1j * partial
             partial[(2 ** n) * i + (j ^ index)][(2 ** n) * i + j] = 0
 
 
@@ -157,8 +157,9 @@ def qwalk_oracle(formula):
     # check = np.matrix(S) 
     # check_copy = S.copy().conj().T
     # check = check @ check_copy
-    # print(check)
-    # # check = check.data.toarray()
+    # check = np.array(check)
+    # # print(check)
+    # # # check = check.data.toarray()
     # for i in check:
     #     for j in i:
     #         print(int(j),end=" ")
@@ -174,8 +175,8 @@ def qwalk_oracle(formula):
 
     ## Easier to work with numpy arrays
 
-    ## Create the evolution operator
-    U = S @ G_I
+    # ## Create the evolution operator
+    # U = S @ G_I
 
 
 
@@ -187,17 +188,39 @@ def qwalk_oracle(formula):
     assignments = compute_sat_assignments(formula)
 
     vertex = np.zeros(2 ** n)
+    print(len(assignments))
     for assignment in assignments:
         index = int("".join(map(str, assignment)), 2)
-
         vertex[index] = 1
+        ##Bitwise Complement of vertex 
+        v_c = np.array([int(not i) for i in vertex]) 
+        ##
+        state_c = np.kron(coin_space, v_c)
+
         state = np.kron(coin_space, vertex)
+        print(np.outer(state, state_c.conj().T))
+        print(np.outer(state_c, state.conj().T))
+        break
+        S += np.outer(state, state_c.conj().T)
+        S += np.outer(state_c, state.conj().T)
         partial = 2 * np.outer(state, state.conj().T)
         R -= partial
         vertex[index] = 0
 
-    U = U @ R
+    # U = U @ R
     
+    check = np.matrix(S) 
+    check_copy = S.copy().conj().T
+    check = check @ check_copy
+    check = np.array(check)
+    # print(check)
+    # # check = check.data.toarray()
+    for i in check:
+        for j in i:
+            print(int(j),end=" ")
+        print()
+
+    U = np.matrix(S) @ np.matrix(G_I)
     ## Get the optimal time
     #t_opt = int((np.pi / 4) * np.sqrt(2 * (2 ** n))) 
     t_opt = int((np.pi / 4) * np.sqrt(4 * ((4/3) ** n))) 
@@ -245,12 +268,12 @@ def qwalk_oracle(formula):
 formula_fixed  = QSAT.QSAT([[1, 2, 3], [-1, -2, 3], [1, -2, -3], [-1, 2, -3]])
 
 list_rounds = []
-n_trials = 1000
+n_trials = 1
 indicator = n_trials // 10 if n_trials > 10 else 1
-n = 5
+n = 3
 for i in range(n_trials):
     formula = generate_instances.gen_formula(n)
-    formula.clauses = formula.clauses
+    formula.clauses = formula.clauses[::2]
     assignment, rounds = qwalk_oracle(formula)
     list_rounds.append(rounds)
     if i % indicator == 0:

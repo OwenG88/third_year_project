@@ -173,12 +173,12 @@ def qwalk_oracle(formula):
 #formula  = QSAT.QSAT([[1, 2, 3], [-1, -2, 3], [1, -2, -3], [-1, 2, -3]])
 
 list_rounds = []
-n_trials = 1
+n_trials = 1000
 indicator = n_trials // 10 if n_trials > 10 else 1
-n = 9
+n = 5
 for i in range(n_trials):
     formula = generate_instances.gen_formula(n)
-    formula.clauses = formula.clauses[::2]
+    formula.clauses = formula.clauses[::4]
     assignment, rounds = qwalk_oracle(formula)
     list_rounds.append(rounds)
     if i % indicator == 0:

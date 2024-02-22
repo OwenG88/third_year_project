@@ -109,9 +109,11 @@ def qwalk_oracle(formula):
             a_v = qt.tensor(a, v).dag()
 
             partial =  e_av *a_v
+            # partial =  e_av * e_av.dag()
+            # partial = a_v.dag() * a_v
             partial = qt.Qobj(partial.data.toarray())
             # print(partial)
-            S -= partial
+            S += 1j * partial
 
             # for l in partial.data.toarray():
             #     for k in l:
@@ -125,16 +127,17 @@ def qwalk_oracle(formula):
     #         if j != 0:
     #             print(int(j),end=" ")
     # print()
-    # check = S * S.dag() # # print(check)
+    check = S * S.dag() # # print(check)
     # check = np.matrix(S.data.toarray()) 
     # check_copy = check.copy().conj().T
     # check = check @ check_copy
     # print(check)
     # # check = S.data.toarray()
-    # for i in check:
-    #     for j in i:
-    #         print(int(j),end=" ")
-    #     print()
+    check = check.data.toarray()
+    for i in check:
+        for j in i:
+            print(int(j),end=" ")
+        print()
             
     ##Check S and S_og 
     # for i,j in zip(S.data.toarray(), S_og.data.toarray()):
@@ -220,15 +223,15 @@ def qwalk_oracle(formula):
 formula_fixed  = QSAT.QSAT([[1, 2, 3], [-1, -2, 3], [1, -2, -3], [-1, 2, -3]])
 
 list_rounds = []
-n_trials = 100
-n = 5
+n_trials = 1
+n = 3
 for i in range(n_trials):
     formula = generate_instances.gen_formula(n)
-    formula.clauses = formula.clauses
+    formula.clauses = formula.clauses[::4]
     assignment, rounds = qwalk_oracle(formula)
     list_rounds.append(rounds)
-    if i % (n_trials // 10) == 0:
-        print(F"Trial {i} completed")
+    # if i % (n_trials // 10) == 0:
+    #     print(F"Trial {i} completed")
     
 print("Average rounds: ", sum(list_rounds) / n_trials)
 
