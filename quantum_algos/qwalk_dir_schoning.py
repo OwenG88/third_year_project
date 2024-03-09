@@ -1,0 +1,244 @@
+import numpy as np
+import random
+import QSAT
+import generate_instances
+from numba import njit, jit
+
+###Builds on qwalk.py but uses oracle calls to modify the evolution 
+###operator to bias towards satisfying assignments
+
+def compute_sat_assignments(formula):
+    ## Generate a list of all satisfying assignments
+    ## of a given SAT formula
+
+    n = formula.n
+    assignments = []
+
+    for i in range(2**n):
+        assignment = bin(i)[2:].zfill(n)
+        assignment = list(map(int, assignment))
+        if formula.check_satisfied(assignment):
+            assignments.append(assignment)
+    
+    return assignments
+
+
+# @njit(fastmath=True, cache=True)
+def speed_prod(a, v, v_ea):
+    # print("i j a v v_ea")
+
+    e_av = np.kron(a, v_ea) 
+    a_v = np.kron(a, v).conj().T
+    partial = np.outer(e_av, a_v)   
+    # for i in range(len(partial)):
+    #     for j in range(len(partial[i])):
+    #         if partial[i][j] != 0:
+
+    #             a_nonzero = np.where(a == 1)[0]
+    #             v_nonzero = np.where(v == 1)[0]
+    #             v_ea_nonzero = np.where(v_ea == 1)[0]
+            
+    #             print(i, j, a_nonzero, v_nonzero, v_ea_nonzero)
+
+
+    return partial
+
+def get_vars_from_unsat_clause(formula, assignment):
+    unsat_clauses = []
+    for clause in formula.clauses:
+        for literal in clause:
+            if assignment[abs(literal) - 1] * literal > 0:
+                break
+        else:
+            unsat_clauses += [*map(abs,clause)]
+    
+    return list(set(unsat_clauses))
+
+def make_edges(n): 
+    edges = []
+    a = np.zeros(n)
+    for i in range(n):
+        a[i] = 1
+        x = ["0" for _ in range(n)]
+        x[i] = "1"
+        index = int("".join(x), 2)
+        edges.append((i, a.copy(), index))
+        a[i] = 0
+    return edges
+
+# @jit(fastmath=True, cache=True)
+def build_shift(n):
+    # edges = make_edges(n)
+    S = np.zeros((n * 2 ** n, n * 2 ** n), dtype=complex)
+    partial = np.zeros((n * 2 ** n, n * 2 ** n), dtype=complex)
+    for j in range(2 ** n):
+        vertex = list(map(int,bin(j)[2:].zfill(n)))
+        possible_edges = get_vars_from_unsat_clause(formula, vertex)
+        # complement = [i for i in range(1, n + 1) if i not in possible_edges]
+
+        for i in range(n):
+            index = 2 ** (n - 1 - i)  
+            
+            # v_ea[j ^ index] = 1
+            # print(i, j, (j ^ index))
+            # print(speed_prod(a, v, v_ea))
+            partial[(2 ** n) * i + (j ^ index)][(2 ** n) * i + j] = 1
+
+            # true_partial = speed_prod(a, v, v_ea)
+            ##Check partial and true partial are equal
+            # for a,b in zip(partial, true_partial):
+            #     for k,l in zip(a,b):
+            #         if k != l:
+            #             print("Not equal")
+            #             print(i, j, (j ^ index))
+            #             print(k,l)
+
+            if i + 1 in possible_edges:
+                S += partial
+            # else:
+            #     S -= 1j * partial
+            partial[(2 ** n) * i + (j ^ index)][(2 ** n) * i + j] = 0
+
+
+            # v_ea[j ^ index] = 0
+
+
+        # v[j] = 0
+            
+    return S
+
+
+def qwalk_oracle(formula):
+    n = formula.n
+    ## Create the Grover Coin
+    G = (2 / n) * np.ones(n) - np.eye(n)
+    ## Create the position space in a diagonal state
+    position_space = (1 / np.sqrt(2**n)) * np.ones((2**n, 1))
+
+    ## Create the coin space in a diagonal state
+    coin_space = (1 / np.sqrt(n)) * np.ones((n, 1))
+    ## Create the initial state
+    initial_state = np.kron(coin_space, position_space)
+    ## Create the Grover Coin operator
+    G_I = np.kron(G,np.eye(2 ** n))
+    ## Create the shift operator
+    S = np.zeros((n * 2 ** n, n * 2 ** n), dtype=complex)
+    S = build_shift(n)
+
+    R = np.eye(n * 2 ** n, dtype=complex)
+
+    assignments = compute_sat_assignments(formula)
+    # print(S)
+
+    vertex = np.zeros(2 ** n)
+    v_c = np.zeros(2**n)
+    # print(len(assignments))
+    a = np.ones(n)
+    for assignment in assignments:
+        index = int("".join(map(str, assignment)), 2)
+        vertex[index] = 1
+        ##Bitwise Complement of vertex 
+        index_c = np.array([1 - i for i in assignment]) 
+        index_c = int("".join(map(str, index_c)), 2)
+        v_c[index_c] = 1
+        ##
+        state_c = np.kron(a, v_c)
+
+        state = np.kron(a, vertex)
+        # print(np.outer(state, state_c.conj().T))
+        # print(np.outer(state_c, state.conj().T))
+
+        # S += np.outer(state, state_c.conj().T)
+
+        # S += np.outer(state_c, state.conj().T)
+        partial = 2 * np.outer(state, state.conj().T)
+        R -= partial
+        vertex[index] = 0
+        v_c[index_c] = 0
+
+    # U = U @ R
+    
+    check = np.matrix(S) 
+    check_copy = S.copy().conj().T
+    check = check @ check_copy
+    check = np.array(check)
+    # print(check)
+    # print(np.array_equal(check, np.eye((2 ** n) * n)))
+    # print(check)
+    # check = check.data.toarray()
+    for i,j in zip(check,np.eye((2 ** n) * n)):
+        for k,l in zip(i,j):
+            if k != l:
+                print("here")
+                return 0,0
+    #             print(k,l)
+    #         # print(int(j),end=" ")
+    #     print()
+
+    U = np.matrix(S) @ np.matrix(G_I)
+    ## Get the optimal time
+    #t_opt = int((np.pi / 4) * np.sqrt(2 * (2 ** n))) 
+    t_opt = int((np.pi / 4) * np.sqrt(4 * ((4/3) ** n))) 
+    # # t_opt = int(np.sqrt(np.sqrt(np.sqrt(2 ** n))))
+    # t_opt = 2*n
+
+    ## Simulate the evolution
+    Ut = np.linalg.matrix_power(U, t_opt)
+    initial_state = Ut @ initial_state
+
+    # print(initial_state)
+    
+    ## Get the non-zero states out
+    states = []
+    for i in range(len(initial_state)):
+        state = initial_state[i][0]
+        if state != 0:
+            states.append([i, state])
+
+
+    ## Normalise the states
+    normalisation = np.sqrt(sum([i[1] ** 2 for i in states])) 
+    states = [[i[0], i[1] / normalisation] for i in states]
+
+    assignment = None
+    counter = 0
+
+    while assignment == None:
+        counter += 1
+        ## Measure
+        state = random.choices(states, weights=[abs(i[1]) ** 2 for i in states])
+        
+        ## Check the corresponding SAT assignment
+        assignment = bin(state[0][0] % (2** n))[2:].zfill(n)
+        assignment = list(map(int, assignment))
+        if formula.check_satisfied(assignment): 
+            return assignment, counter
+        
+        ##Check the complement
+        complement = [1 - i for i in assignment]
+        if formula.check_satisfied(complement):
+            return complement, counter
+        
+        assignment = None
+    return None
+
+
+
+
+
+formula_fixed  = QSAT.QSAT([[1, 2, 3], [-1, -2, 3], [1, -2, -3], [-1, 2, -3]])
+
+list_rounds = []
+n_trials = 100
+indicator = n_trials // 10 if n_trials > 10 else 1
+n = 5
+for i in range(n_trials):
+    formula = generate_instances.gen_formula(n)
+    formula.clauses = formula.clauses
+    assignment, rounds = qwalk_oracle(formula)
+    list_rounds.append(rounds)
+    if i % indicator == 0:
+        print(F"Trial {i} completed")
+    
+print("Average rounds: ", sum(list_rounds) / n_trials)
+

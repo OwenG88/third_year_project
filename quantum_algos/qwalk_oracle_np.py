@@ -130,7 +130,8 @@ def qwalk_oracle(formula):
     
     ## Get the optimal time
     #t_opt = int((np.pi / 4) * np.sqrt(2 * (2 ** n))) 
-    t_opt = int((np.pi / 4) * np.sqrt(4 * ((4/3) ** n)))
+    # t_opt = int((np.pi / 4) * np.sqrt(4 * ((4/3) ** n)))
+    t_opt = n
 
     ## Simulate the evolution
     Ut = np.linalg.matrix_power(U, t_opt)
@@ -172,13 +173,16 @@ def qwalk_oracle(formula):
 
 #formula  = QSAT.QSAT([[1, 2, 3], [-1, -2, 3], [1, -2, -3], [-1, 2, -3]])
 
+
 list_rounds = []
 n_trials = 1000
 indicator = n_trials // 10 if n_trials > 10 else 1
 n = 5
+
+
 for i in range(n_trials):
     formula = generate_instances.gen_formula(n)
-    formula.clauses = formula.clauses[::4]
+    formula.clauses = formula.clauses
     assignment, rounds = qwalk_oracle(formula)
     list_rounds.append(rounds)
     if i % indicator == 0:

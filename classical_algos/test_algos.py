@@ -1,5 +1,6 @@
 import rw_SAT
 import schoning
+import mod_schoning
 import SAT
 
 
@@ -22,18 +23,20 @@ def test_sat_algo(algo):
         formula = SAT.SAT(clauses)
         if i % 10 == 0:
             print(f"Started solving {i}")
-        assignment = algo(formula)
+        assignment, counter = algo(formula)
         if assignment == None:
             print(f"Failed to solve {i}")
 
-        n_attempts.append(formula.counter)
+        n_attempts.append(counter)
     return n_attempts
 
 mean = lambda x: round(sum(x)/len(x),2)
-rw_attempts = test_sat_algo(rw_SAT.walk)
+# rw_attempts = test_sat_algo(rw_SAT.walk)
 schoning_attempts = test_sat_algo(schoning.schoning)
-print(f"Random Walk Average Steps: {mean(rw_attempts)}")
+mod_schoning_attempts = test_sat_algo(mod_schoning.schoning)
+# print(f"Random Walk Average Steps: {mean(rw_attempts)}")
 print(f"Schoning Average Steps: {mean(schoning_attempts)}")
+print(f"Modified Schoning Average Steps: {mean(mod_schoning_attempts)}")
 
 
 ## Write attempts to file
