@@ -10,13 +10,16 @@ pos = int(np.random.binomial(n, 0.5))
 poss = []
 jackpot = 0
 counter = 0
+counter_inner = 0
 for i in range(bound): 
     counter += 1
     pos = int(np.random.binomial(n, 0.5))
     for j in range(3 * n):
-        print(pos)
+        counter_inner += 1
+        # print(pos)
         if pos == 0 or pos == n:
             print(counter)
+            print(counter_inner)
             exit()
         elif random.random() <= 1/ k:
             pos -= 1

@@ -2,9 +2,11 @@ import random
 import matplotlib.pyplot as plt
 import numpy as np
 
-n = 30
+n = 50
 k = 3
-bound = int(30 * (2 * (k -1) / k)**n)
+# bound = int(30 * (2 * (k -1) / k)**n)
+bound = int((2 * (k -1) / k)**n)
+print(bound)
 
 pos = int(np.random.binomial(n, 0.5))
 poss = []

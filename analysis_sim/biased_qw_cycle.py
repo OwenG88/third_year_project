@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import math
 
 n = 100
-k = 100
+k = 2
 # n_steps = 7
 rho = 1 / k #probability of going left
 
@@ -75,7 +75,7 @@ evolution_operator = shift_operator @ np.kron(np.eye(n), coin_operator)
 final_state = inital_state
 
 probs = []
-bound = 8000
+bound = 500
 ys=  []
 for n_steps in range(bound):
     final_state = evolution_operator @ final_state
@@ -103,6 +103,11 @@ x = np.arange(0, bound)
 x2 = np.arange(0, n)
 
 print(n, np.argmax(probs)+1) 
+
+
+plt.title("Probability Distribution of a Biased Quantum-Walk on the Cycle")
+plt.xlabel("Number of steps")
+plt.ylabel("Probability of being at 0")
 plt.plot(x, probs)
 plt.show()
 

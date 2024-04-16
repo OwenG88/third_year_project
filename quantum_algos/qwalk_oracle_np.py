@@ -38,9 +38,9 @@ def build_shift(n):
     for j in range(2 ** n):
         for i in range(n):
             index = 2 ** (n - 1 - i)  
-            partial[(2 ** n) * i + (j ^ index)][(2 ** n) * i + j] = 1
-            S += partial
-            partial[(2 ** n) * i + (j ^ index)][(2 ** n) * i + j] = 0
+            # partial[(2 ** n) * i + (j ^ index)][(2 ** n) * i + j] = 1
+            S[(2 ** n) * i + (j ^ index)][(2 ** n) * i + j] += 1
+            # partial[(2 ** n) * i + (j ^ index)][(2 ** n) * i + j] = 0
             
     return S
 

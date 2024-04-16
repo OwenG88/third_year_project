@@ -74,7 +74,23 @@ def qwalk(formula):
     ## Normalise the states
     normalisation = np.sqrt(sum([i[1] ** 2 for i in states])) 
     states = [[i[0], i[1] / normalisation] for i in states]
+
+    return states
    
+   
+
+#formula  = QSAT.QSAT([[1, 2, 3], [-1, -2, 3], [1, -2, -3], [-1, 2, -3]])
+n = 7
+list_rounds = []
+n_trials = 1000
+formula = QSAT.QSAT([[]]) 
+formula.n = n
+states = qwalk(formula)
+
+for i in range(n_trials):
+    formula = generate_instances.gen_formula(n)
+    # assignment, rounds = qwalk(formula)
+
     assignment = None
     counter = 0
     while assignment == None:
@@ -86,21 +102,12 @@ def qwalk(formula):
         assignment = bin(state[0][0] % (2** n))[2:].zfill(n)
         assignment = list(map(int, assignment))
         if formula.check_satisfied(assignment): 
-            return assignment, counter
-        
+            break
+ 
         assignment = None
+    list_rounds.append(counter)
+    # print(rounds)
 
-    return None
-
-
-#formula  = QSAT.QSAT([[1, 2, 3], [-1, -2, 3], [1, -2, -3], [-1, 2, -3]])
-
-list_rounds = []
-n_trials = 1
-for i in range(n_trials):
-    formula = generate_instances.gen_formula(5)
-    assignment, rounds = qwalk(formula)
-    list_rounds.append(rounds)
-    print(rounds)
-    
-print("Average rounds: ", sum(list_rounds) / n_trials)
+print("Mean rounds: ", sum(list_rounds) / n_trials)
+print("Median rounds: ", np.median(list_rounds))
+print("Standard Deviation: ", np.std(list_rounds))
