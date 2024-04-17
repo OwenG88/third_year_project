@@ -30,7 +30,7 @@ def speed_prod(a, v, v_ea):
     a_v = np.kron(a, v).conj().T
     return np.outer(e_av, a_v)
 
-@njit(fastmath=True, cache=True)
+@njit(fastmath = True, cache=True)
 def build_shift(n):
     # edges = make_edges(n)
     S = np.zeros((n * 2 ** n, n * 2 ** n))
@@ -63,10 +63,10 @@ def qwalk_oracle(formula):
     ## Create the Grover Coin operator
     G_I = np.kron(G,np.eye(2 ** n))
 
-    ## Create the shift operator
+    # Create the shift operator
     # S = np.zeros((n * 2 ** n, n * 2 ** n))
 
-    # print("Initial objects made")
+    # #print("Initial objects made")
     # for i in range(n):
     #     #Our coin vector
     #     # a = qt.basis(n, i)
@@ -129,9 +129,9 @@ def qwalk_oracle(formula):
 
     
     ## Get the optimal time
-    #t_opt = int((np.pi / 4) * np.sqrt(2 * (2 ** n))) 
+    t_opt = int((np.pi / 4) * np.sqrt(2 * (2 ** n))) 
     # t_opt = int((np.pi / 4) * np.sqrt(4 * ((4/3) ** n)))
-    t_opt = n
+    # t_opt = n
 
     ## Simulate the evolution
     Ut = np.linalg.matrix_power(U, t_opt)
@@ -177,7 +177,7 @@ def qwalk_oracle(formula):
 list_rounds = []
 n_trials = 1000
 indicator = n_trials // 10 if n_trials > 10 else 1
-n = 6
+n = 5
 
 
 for i in range(n_trials):
@@ -188,4 +188,6 @@ for i in range(n_trials):
     if i % indicator == 0:
         print(F"Trial {i} completed")
     
-print("Average rounds: ", sum(list_rounds) / n_trials)
+print("Mean rounds: ", sum(list_rounds) / n_trials)
+print("Median rounds: ", np.median(list_rounds))
+print("Standard Deviation: ", np.std(list_rounds))
