@@ -1,5 +1,7 @@
 # Quantum Algorithm Data
 
+Summary results are obtained by discarding highest and lowest values and then taking the mean of the middle three.
+
 ## qwalk_hypercube.py
 For formulas with n=7 and n_trials=1000 we obtained,
 
@@ -57,6 +59,10 @@ Mean rounds:  3.683
 Median rounds:  2.0
 Standard Deviation:  5.355792284993883
 
+Mean: 3.8967
+Median: 2
+Standard Dev:5.587
+
 
 For formulas n=4, n_trials = 1000 
 
@@ -80,7 +86,35 @@ Mean rounds:  6.752
 Median rounds:  4.0
 Standard Deviation:  9.977399260328315
 
+
+Mean: 6.65567
+Median: 4
+Standard Dev:9.3028
+
 For formulas with n=5, n_trials = 1000
 
+Mean rounds:  9.079
+Median rounds:  6.0
+Standard Deviation:  8.996819382426214
+
+Mean rounds:  8.86
+Median rounds:  6.0
+Standard Deviation:  9.495177723455207
+
+Mean rounds:  8.502
+Median rounds:  6.0
+Standard Deviation:  9.057703682501431
+
+Mean rounds:  8.786
+Median rounds:  6.0
+Standard Deviation:  9.3167700411677
+
+Mean rounds:  8.462
+Median rounds:  6.0
+Standard Deviation:  8.729636647650347
+
+Mean: 8.716
+Median: 6
+Standard Dev:9.1237
 
 

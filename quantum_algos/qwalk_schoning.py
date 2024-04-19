@@ -1,3 +1,12 @@
+##Very experimental code
+## Do not expect any reliable results
+
+##Attempts to modify qwalk_oracle_np
+##suffered difficulties as unable to 
+##maintain unitarity of the shift operator
+##on a non-regular graph.
+
+
 import qutip as qt
 import numpy as np
 import random

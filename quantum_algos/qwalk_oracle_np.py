@@ -1,3 +1,8 @@
+##Implementation of a grover type spatial 
+##search algorithm for SAT as a quantum-walk 
+##on the hypercube
+
+
 import qutip as qt
 import numpy as np
 import random

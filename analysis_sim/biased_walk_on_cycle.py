@@ -1,3 +1,7 @@
+## Simple biased random walk on the cycle
+## We move clockwise with probability 1/k and 
+## anticlockwise with probability 1 - 1/k
+
 import random
 import matplotlib.pyplot as plt
 import numpy as np

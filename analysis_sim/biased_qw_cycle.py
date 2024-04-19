@@ -1,3 +1,8 @@
+##Quantum walk on the cycle where we move clockwise 
+## with probabiity 1/k and anticlockwise with probability 
+##1 - 1/k
+
+
 import numpy as np 
 import random 
 import matplotlib.pyplot as plt

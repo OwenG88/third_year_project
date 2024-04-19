@@ -1,3 +1,9 @@
+##Biased walk on the line
+##We move left with probability 1/k
+##and right with probability 1 - 1/k
+##Implementation of Eppstein's analysis
+##of Schöning's algorithm
+
 import random
 import matplotlib.pyplot as plt
 import numpy as np

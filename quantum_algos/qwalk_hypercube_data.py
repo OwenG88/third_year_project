@@ -1,3 +1,6 @@
+##Naive Quantum-Walk on the Hypercube
+
+
 import qutip as qt
 import numpy as np
 import random

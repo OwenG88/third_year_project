@@ -1,3 +1,7 @@
+##An implementation of Schöning's algorithm 
+##but we check the assignment and its complement 
+##at every step
+
 import SAT 
 import random
 

@@ -1,3 +1,5 @@
+##Naive random walk for SAT solving
+
 import SAT 
 import random
 

@@ -1,3 +1,6 @@
+##Classical implementation of Schöning's algorithm 
+
+
 import SAT 
 import random
 
